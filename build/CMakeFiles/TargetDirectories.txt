@@ -1,3 +1,0 @@
-/Users/samsal/Projects/ctep/build/CMakeFiles/rebuild_cache.dir
-/Users/samsal/Projects/ctep/build/CMakeFiles/edit_cache.dir
-/Users/samsal/Projects/ctep/build/CMakeFiles/ctep.dir
