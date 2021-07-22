@@ -6,133 +6,135 @@
 
 #define DISABLE_EXPLICIT int &...
 
-namespace Ctep {
+namespace ctep {
 
-template <typename... Ts> struct Pack {};
+template <typename... Ts> struct pack {};
 
 template <DISABLE_EXPLICIT, typename... Us>
-consteval auto pack(Us...) noexcept {
-  return Pack<Us...>{};
+consteval auto make_pack(Us...) noexcept {
+  return pack<Us...>{};
 }
 
 template <DISABLE_EXPLICIT, typename U, typename... Us>
-consteval auto append(Pack<Us...>, U) noexcept {
-  return Pack<Us..., U>{};
+consteval auto append(pack<Us...>, U) noexcept {
+  return pack<Us..., U>{};
 }
 
-namespace Detail {
+namespace detail {
 
 // TODO(samuel): Non-recursive method
 
 template <DISABLE_EXPLICIT, typename U, typename... Us>
-consteval auto get(Pack<U, Us...>, std::integral_constant<size_t, 0>) noexcept {
+consteval auto get(pack<U, Us...>, std::integral_constant<size_t, 0>) noexcept {
   return U{};
 }
 
 template <DISABLE_EXPLICIT, size_t N, typename U, typename... Us>
-consteval auto get(Pack<U, Us...>, std::integral_constant<size_t, N>) noexcept {
-  return get(Pack<Us...>{}, std::integral_constant<size_t, N - 1>{});
+consteval auto get(pack<U, Us...>, std::integral_constant<size_t, N>) noexcept {
+  return get(pack<Us...>{}, std::integral_constant<size_t, N - 1>{});
 }
 
-} // namespace Detail
+} // namespace detail
 
 template <size_t N, DISABLE_EXPLICIT, typename U, typename... Us>
-consteval auto get(Pack<U, Us...>) noexcept {
-  return Detail::get(Pack<U, Us...>{}, std::integral_constant<size_t, N>{});
+consteval auto get(pack<U, Us...>) noexcept {
+  return detail::get(pack<U, Us...>{}, std::integral_constant<size_t, N>{});
 }
 
-template <size_t N> consteval auto get(Pack<>) noexcept = delete;
+template <size_t N> consteval auto get(pack<>) noexcept = delete;
 
-namespace Detail {
+namespace detail {
 
 template <DISABLE_EXPLICIT, size_t... Is, typename... Us>
-consteval auto pop(Pack<Us...> Pack, std::index_sequence<Is...>) noexcept {
-  return pack(get<Is>(Pack)...);
+consteval auto pop_back(pack<Us...> pack, std::index_sequence<Is...>) noexcept {
+  return make_pack(get<Is>(pack)...);
 }
 
-} // namespace Detail
+} // namespace detail
 
 template <DISABLE_EXPLICIT, typename... Us>
-consteval auto pop(Pack<Us...> Pack) noexcept {
-  return Detail::pop(Pack, std::make_index_sequence<sizeof...(Us) - 1>{});
+consteval auto pop_back(pack<Us...> pack) noexcept {
+  return detail::pop_back(pack, std::make_index_sequence<sizeof...(Us) - 1>{});
 }
 
 template <DISABLE_EXPLICIT, typename U, typename... Us>
-consteval auto popFront(Pack<U, Us...>) noexcept {
-  return Pack<Us...>{};
+consteval auto pop_front(pack<U, Us...>) noexcept {
+  return pack<Us...>{};
 }
 
-template <size_t N> struct StringLiteral {
+template <size_t N> struct string_literal {
 
-  consteval StringLiteral(char const (&String)[N]) noexcept {
-    std::copy(&String[0], &String[N], &Source[0]);
+  consteval string_literal(char const (&source)[N]) noexcept {
+    std::copy(&source[0], &source[N], &source_[0]);
   }
 
   consteval size_t size() const noexcept { return N; }
 
   template <size_t Idx> consteval char get() const noexcept {
-    return Source[Idx];
+    return source_[Idx];
   }
 
-  char Source[N];
+  char source_[N];
 };
 
-template <char C> struct Char : std::integral_constant<char, C> {};
+template <char C> struct char_constant : std::integral_constant<char, C> {};
 
-namespace Detail {
+namespace detail {
 
-template <StringLiteral Literal, DISABLE_EXPLICIT, size_t... Is>
-consteval auto makeCharPack(std::index_sequence<Is...>) noexcept {
-  return Ctep::pack(Char<Literal.template get<Is>()>{}...);
+template <string_literal Literal, DISABLE_EXPLICIT, size_t... Is>
+consteval auto make_char_pack(std::index_sequence<Is...>) noexcept {
+  return ctep::make_pack(char_constant<Literal.template get<Is>()>{}...);
 }
 
-} // namespace Detail
+} // namespace detail
 
-template <StringLiteral Literal> consteval auto makeCharPack() noexcept {
-  return Detail::makeCharPack<Literal>(
+template <string_literal Literal> consteval auto make_char_pack() noexcept {
+  return detail::make_char_pack<Literal>(
       std::make_index_sequence<Literal.size()>{});
 }
 
-namespace Detail {
+namespace detail {
 
 template <typename T>
-concept Integral = requires {
+concept integral = requires {
   requires std::is_integral_v<T>;
 };
 
-consteval auto power10(Integral auto Number) noexcept {
+consteval auto power_10(integral auto number) noexcept {
 
-  decltype(Number) Base = 1;
+  decltype(number) base = 1;
 
-  while (Number != 1) {
-    --Number;
-    Base *= 10;
+  while (number != 1) {
+    --number;
+    base *= 10;
   }
 
-  return Base;
+  return base;
 }
 
 template <DISABLE_EXPLICIT, size_t... Is, char... Cs>
-consteval auto parseNumber(Pack<Char<Cs>...> Pack,
-                           std::index_sequence<Is...>) noexcept {
-  return (((get<Is>(Pack) - '0') * power10(sizeof...(Is) - Is)) + ...);
+consteval auto parse_number(pack<char_constant<Cs>...> pack,
+                            std::index_sequence<Is...>) noexcept {
+  return (((get<Is>(pack) - '0') * power_10(sizeof...(Is) - Is)) + ...);
 }
 
-} // namespace Detail
+} // namespace detail
 
 template <DISABLE_EXPLICIT, char... Cs>
-consteval auto parseNumber(Pack<Char<Cs>...> Pack) noexcept {
-  if constexpr (get<0>(Pack) == '-') {
-    return -Detail::parseNumber(popFront(Pack),
-                                std::make_index_sequence<sizeof...(Cs) - 1>{});
+consteval auto parse_number(pack<char_constant<Cs>...> pack) noexcept {
+  if constexpr (get<0>(pack) == '-') {
+    return -detail::parse_number(pop_front(pack),
+                                 std::make_index_sequence<sizeof...(Cs) - 1>{});
   }
-  return Detail::parseNumber(Pack, std::make_index_sequence<sizeof...(Cs)>{});
+  return detail::parse_number(pack, std::make_index_sequence<sizeof...(Cs)>{});
 }
 
-} // namespace Ctep
+} // namespace ctep
 
+// NOTE(samuel): Pop the null terminated string
 #define CTEP_PARSE_NUMBER_TEST(Num)                                            \
-  static_assert(Ctep::parseNumber(Ctep::pop(Ctep::makeCharPack<#Num>())) == Num)
+  static_assert(                                                               \
+      ctep::parse_number(ctep::pop_back(ctep::make_char_pack<#Num>())) == Num)
 
 int main() {
   CTEP_PARSE_NUMBER_TEST(0);
