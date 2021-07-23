@@ -14,7 +14,7 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
         ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 endif()
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}//main.cpp)
+add_executable(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}/main.cpp)
 
 target_compile_options(${PROJECT_NAME} PRIVATE -O3 
                                                -Wall
