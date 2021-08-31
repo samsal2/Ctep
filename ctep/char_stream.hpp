@@ -1,10 +1,10 @@
 #ifndef CTEP_MISC_HPP
 #define CTEP_MISC_HPP
 
-#include <utility>
-
 #include "ctep/pack.hpp"
 #include "ctep/string_literal.hpp"
+
+#include <utility>
 
 namespace ctep {
 

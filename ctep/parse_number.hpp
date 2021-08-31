@@ -2,6 +2,7 @@
 #define CTEP_PARSE_NUMBER_HPP
 
 #include "ctep/char_stream.hpp"
+
 #include <type_traits>
 #include <utility>
 
@@ -36,8 +37,8 @@ consteval auto parse_number(pack<char_constant<Cs>...> pack,
 template <DISABLE_EXPLICIT, char... Cs>
 consteval auto parse_number(pack<char_constant<Cs>...> pack) noexcept {
   if constexpr (get<0>(pack) == '-') {
-    return -detail::parse_number(pop_front(pack),
-                                 std::make_index_sequence<sizeof...(Cs) - 1>{});
+    return -detail::parse_number(
+        pop_front(pack), std::make_index_sequence<sizeof...(Cs) - 1>{});
   }
 
   return detail::parse_number(pack, std::make_index_sequence<sizeof...(Cs)>{});

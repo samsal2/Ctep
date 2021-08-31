@@ -25,12 +25,14 @@ namespace detail {
 // TODO(samuel): Non-recursive method
 
 template <DISABLE_EXPLICIT, typename U, typename... Us>
-consteval auto get(pack<U, Us...>, std::integral_constant<size_t, 0>) noexcept {
+consteval auto get(pack<U, Us...>,
+                   std::integral_constant<size_t, 0>) noexcept {
   return U{};
 }
 
 template <DISABLE_EXPLICIT, size_t N, typename U, typename... Us>
-consteval auto get(pack<U, Us...>, std::integral_constant<size_t, N>) noexcept {
+consteval auto get(pack<U, Us...>,
+                   std::integral_constant<size_t, N>) noexcept {
   return get(pack<Us...>{}, std::integral_constant<size_t, N - 1>{});
 }
 
@@ -46,7 +48,8 @@ template <size_t N> consteval auto get(pack<>) noexcept = delete;
 namespace detail {
 
 template <DISABLE_EXPLICIT, size_t... Is, typename... Us>
-consteval auto pop_back(pack<Us...> pack, std::index_sequence<Is...>) noexcept {
+consteval auto pop_back(pack<Us...> pack,
+                        std::index_sequence<Is...>) noexcept {
   return make_pack(get<Is>(pack)...);
 }
 
